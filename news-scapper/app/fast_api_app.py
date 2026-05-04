@@ -26,6 +26,7 @@ from a2a.utils.constants import (
     EXTENDED_AGENT_CARD_PATH,
 )
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
 from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
@@ -90,9 +91,9 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
     a2a_app = A2AFastAPIApplication(agent_card=agent_card, http_handler=request_handler)
     a2a_app.add_routes_to_app(
         app_instance,
-        agent_card_url=f"{A2A_RPC_PATH}{AGENT_CARD_WELL_KNOWN_PATH}",
+        agent_card_url=AGENT_CARD_WELL_KNOWN_PATH,
         rpc_url=A2A_RPC_PATH,
-        extended_agent_card_url=f"{A2A_RPC_PATH}{EXTENDED_AGENT_CARD_PATH}",
+        extended_agent_card_url=EXTENDED_AGENT_CARD_PATH,
     )
     yield
 
@@ -101,6 +102,14 @@ app = FastAPI(
     title="news-scapper",
     description="API for interacting with the Agent news-scapper",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

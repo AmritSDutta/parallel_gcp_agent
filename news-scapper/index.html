@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Reporter - News Scraper</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; line-height: 1.6; }
+        #chat-box { border: 1px solid #ccc; padding: 20px; border-radius: 8px; background: #f9f9f9; min-height: 300px; }
+        .input-group { margin-top: 20px; display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:disabled { background: #ccc; }
+        .news-item { margin-bottom: 20px; border-bottom: 1px dashed #ddd; padding-bottom: 10px; }
+        .news-item h3 { margin: 0 0 10px 0; color: #333; }
+        .news-item a { color: #007bff; text-decoration: none; font-size: 0.9em; }
+        .status { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>📰 AI News Reporter</h1>
+    <p>Type a location to get the latest news from the last 24 hours.</p>
+
+    <div id="chat-box">
+        <div id="results">Enter a location below...</div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="location" placeholder="e.g. London, India, California" onkeypress="if(event.key==='Enter') fetchNews()">
+        <button id="send-btn" onclick="fetchNews()">Get News</button>
+    </div>
+
+    <script>
+        async function fetchNews() {
+            const locationInput = document.getElementById('location');
+            const resultsDiv = document.getElementById('results');
+            const btn = document.getElementById('send-btn');
+            const location = locationInput.value.trim();
+
+            if (!location) return;
+
+            // UI State
+            btn.disabled = true;
+            locationInput.disabled = true;
+            resultsDiv.innerHTML = `<p class="status">Searching for news in ${location}...</p>`;
+
+            const payload = {
+                jsonrpc: '2.0',
+                id: 'web-req-' + Date.now(),
+                method: 'message/send',
+                params: {
+                    message: {
+                        messageId: 'msg-' + Date.now(),
+                        role: 'user',
+                        parts: [{ text: location }]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/a2a/app', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    resultsDiv.innerHTML = `<p style="color:red">Error: ${data.error.message}</p>`;
+                } else {
+                    const task = data.result;
+                    if (task && task.artifacts && task.artifacts.length > 0) {
+                        const newsData = JSON.parse(task.artifacts[0].parts[0].text);
+                        renderNews(newsData.all_news, resultsDiv);
+                    } else {
+                        resultsDiv.innerHTML = "No news found or unexpected response format.";
+                    }
+                }
+            } catch (err) {
+                resultsDiv.innerHTML = `<p style="color:red">Connection Refused. Is the server running on port 8000?</p>`;
+            } finally {
+                btn.disabled = false;
+                locationInput.disabled = false;
+            }
+        }
+
+        function renderNews(newsList, container) {
+            if (!newsList || newsList.length === 0) {
+                container.innerHTML = "No relevant news found for this location.";
+                return;
+            }
+            container.innerHTML = newsList.map(item => `
+                <div class="news-item">
+                    <h3>${item.headline}</h3>
+                    <p>${item.summary}</p>
+                    ${item.references.map(ref => `<a href="${ref}" target="_blank">🔗 View Source</a>`).join(' | ')}
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "http://127.0.0.1:8000/"
 A2A_RPC_URL = BASE_URL + "a2a/app/"
-AGENT_CARD_URL = A2A_RPC_URL + ".well-known/agent-card.json"
+AGENT_CARD_URL = BASE_URL + ".well-known/agent-card.json"
 FEEDBACK_URL = BASE_URL + "feedback"
 
 HEADERS = {"Content-Type": "application/json"}
