@@ -96,7 +96,7 @@ def get_publish_start_time() -> str:
 ai_reporter = Agent(
     name="AI_Reporter",
     model=Gemini(
-        model="gemini-flash-latest",
+        model="gemini-flash-lite-latest",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     generate_content_config=types.GenerateContentConfig(

@@ -59,16 +59,16 @@
             };
 
             try {
-                const response = await fetch('http://localhost:8000/a2a/app', {
+                const response = await fetch('http://127.0.0.1:8000/a2a/app', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
-                
+
                 if (data.error) {
-                    resultsDiv.innerHTML = `<p style="color:red">Error: ${data.error.message}</p>`;
+                    resultsDiv.innerHTML = `<p style="color:red">Agent Error: ${data.error.message}</p>`;
                 } else {
                     const task = data.result;
                     if (task && task.artifacts && task.artifacts.length > 0) {
@@ -79,7 +79,8 @@
                     }
                 }
             } catch (err) {
-                resultsDiv.innerHTML = `<p style="color:red">Connection Refused. Is the server running on port 8000?</p>`;
+                console.error('Fetch Error:', err);
+                resultsDiv.innerHTML = `<p style="color:red">Connection Error: ${err.message}. <br><br> 1. Make sure your server is running on <b>127.0.0.1:8000</b>.<br> 2. Check the browser console (Press F12) for more details.</p>`;
             } finally {
                 btn.disabled = false;
                 locationInput.disabled = false;
